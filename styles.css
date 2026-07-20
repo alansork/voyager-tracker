@@ -1,0 +1,202 @@
+/* styles.css — the Bauhaus design system for the voyager 1 tracker.
+ *
+ * The look copies the school's 1920s graphic language on purpose:
+ *  - only the primary colours (red, blue, yellow) + black on paper-white,
+ *    following Kandinsky's colour theory taught at Weimar;
+ *  - Kandinsky's form lesson: circle, square, triangle carry meaning
+ *    (here: planet, dwarf planet, voyager);
+ *  - geometric sans-serif type, everything lowercase — Herbert Bayer's
+ *    "universal" alphabet dropped capitals entirely ("why write with two
+ *    alphabets?"). Futura (1927) is the period typeface;
+ *  - asymmetric composition, thick rules, rotated text — like the 1923
+ *    Bauhaus exhibition posters by Joost Schmidt and Herbert Bayer.
+ */
+
+:root {
+  --paper: #ede8dc;        /* aged poster paper */
+  --ink: #16130e;          /* letterpress black */
+  --red: #c62f1e;          /* bauhaus red */
+  --blue: #21489c;         /* bauhaus blue */
+  --yellow: #e3a71b;       /* bauhaus yellow */
+  --font: "Futura", "Jost", "Century Gothic", "Avenir Next", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  font-family: var(--font);
+  color: var(--paper);
+  text-transform: lowercase;   /* bayer's universal alphabet: no capitals */
+}
+
+canvas { display: block; position: fixed; inset: 0; }
+
+/* --- The Bauhaus frame around the viewport ------------------------------- */
+
+#frame-top {
+  position: fixed; top: 0; left: 0; right: 0; height: 6px;
+  background: var(--paper); z-index: 30;
+}
+#frame-left {
+  position: fixed; top: 0; left: 0; bottom: 0; width: 6px;
+  background: var(--paper); z-index: 30;
+}
+#frame-corner {
+  position: fixed; top: 0; left: 0; width: 22px; height: 22px;
+  background: var(--red); z-index: 31;
+}
+
+/* --- HUD: a letterpress data strip down the right edge -------------------- */
+
+#hud {
+  position: fixed; top: 26px; right: 0; z-index: 20;
+  display: flex; flex-direction: column; gap: 2px;
+  font-size: 13px; letter-spacing: 0.06em;
+}
+.hud-block {
+  background: var(--paper); color: var(--ink);
+  border-left: 6px solid var(--ink);
+  padding: 6px 14px 6px 10px;
+  min-width: 210px;
+  display: flex; flex-direction: column;
+}
+.hud-block.accent-red    { border-left-color: var(--red); }
+.hud-block.accent-blue   { border-left-color: var(--blue); }
+.hud-block.accent-yellow { border-left-color: var(--yellow); }
+.hud-label { font-size: 10px; letter-spacing: 0.22em; opacity: 0.65; }
+.hud-value { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* --- Legend: kandinsky's forms --------------------------------------------*/
+
+#legend {
+  position: fixed; left: 26px; bottom: 22px; z-index: 20;
+  background: var(--paper); color: var(--ink);
+  padding: 10px 16px; font-size: 12px; letter-spacing: 0.1em;
+  display: flex; flex-direction: column; gap: 6px;
+  border-top: 6px solid var(--ink);
+}
+.sym { display: inline-block; width: 11px; height: 11px; margin-right: 8px; }
+.sym-circle { background: var(--red); border-radius: 50%; }
+.sym-square { background: var(--blue); }
+.sym-triangle {
+  width: 0; height: 0; background: none;
+  border-left: 6.5px solid transparent;
+  border-right: 6.5px solid transparent;
+  border-bottom: 11px solid var(--yellow);
+}
+
+#hint {
+  position: fixed; bottom: 22px; right: 26px; z-index: 20;
+  font-size: 11px; letter-spacing: 0.18em; color: var(--paper); opacity: 0.55;
+}
+
+/* --- Labels floating over the 3d scene ------------------------------------*/
+
+#labels { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
+.body-label {
+  position: absolute; transform: translate(10px, -50%);
+  white-space: nowrap; pointer-events: auto; cursor: pointer;
+  font-size: 11px; letter-spacing: 0.16em; color: var(--paper);
+  display: flex; align-items: center; gap: 6px;
+  text-shadow: 0 0 6px #000, 0 0 2px #000;
+}
+.body-label:hover { color: #fff; }
+.body-label .sym { margin-right: 0; transform: scale(0.8); }
+.body-label.is-voyager { font-size: 13px; font-weight: 700; letter-spacing: 0.2em; }
+
+/* --- The landing poster ----------------------------------------------------*/
+
+#landing {
+  position: fixed; inset: 0; z-index: 40;
+  background: var(--paper);
+  transition: opacity 0.9s ease, visibility 0.9s;
+}
+#landing.hidden { opacity: 0; visibility: hidden; }
+
+.poster { position: absolute; inset: 0; overflow: hidden; }
+
+/* geometry: a red sun, a black trajectory bar, a yellow voyager triangle */
+.poster-circle {
+  position: absolute; left: 8%; top: 12%;
+  width: 34vmin; height: 34vmin; border-radius: 50%;
+  background: var(--red);
+}
+.poster-bar {
+  position: absolute; left: -12%; top: 30%;
+  width: 150%; height: 3.2vmin;
+  background: var(--ink);
+  transform: rotate(-24deg); transform-origin: 20% 50%;
+}
+.poster-triangle {
+  position: absolute; right: 4%; top: 50%;
+  transform: translateY(-50%) rotate(66deg);
+  width: 0; height: 0;
+  border-left: 4.5vmin solid transparent;
+  border-right: 4.5vmin solid transparent;
+  border-bottom: 7.5vmin solid var(--yellow);
+}
+.poster-square {
+  position: absolute; right: 14%; bottom: 12%;
+  width: 12vmin; height: 12vmin; background: var(--blue);
+  transform: rotate(14deg);
+}
+.poster-rule-v {
+  position: absolute; left: 52%; top: 0; bottom: 0; width: 1.1vmin;
+  background: var(--ink);
+}
+
+.poster-text {
+  position: absolute; left: 56%; top: 14%; width: 34%;
+  color: var(--ink);
+}
+.poster-text .name {
+  font-size: 13px; letter-spacing: 0.5em; margin-bottom: 2.5vmin;
+}
+.poster-text h1 {
+  margin: 0 0 2.5vmin;
+  font-size: 9vmin; line-height: 0.95; font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.poster-text .purpose {
+  font-size: 15px; line-height: 1.55; margin: 0 0 3vmin;
+  max-width: 42ch;
+}
+.poster-data {
+  font-size: 13px; letter-spacing: 0.08em;
+  border-top: 4px solid var(--ink);
+  border-bottom: 4px solid var(--ink);
+  padding: 1.2vmin 0; margin-bottom: 4vmin;
+  font-variant-numeric: tabular-nums;
+}
+.poster-data span { font-weight: 700; color: var(--red); }
+
+.enter {
+  font-family: var(--font); text-transform: lowercase;
+  font-size: 18px; letter-spacing: 0.35em; font-weight: 600;
+  color: var(--paper); background: var(--ink);
+  border: none; cursor: pointer;
+  padding: 2vmin 6vmin 2vmin 6.35vmin;   /* extra left = optically centres the tracked text */
+}
+.enter:hover { background: var(--red); }
+
+.poster-vertical {
+  position: absolute; left: 3.2%; bottom: 6%;
+  color: var(--ink); font-size: 12px; letter-spacing: 0.5em;
+  writing-mode: vertical-rl; transform: rotate(180deg);
+}
+.poster-year {
+  position: absolute; right: 3%; top: 4%;
+  color: var(--ink); font-size: 14px; letter-spacing: 0.3em; font-weight: 600;
+}
+
+/* small screens: stack the poster text over the geometry */
+@media (max-width: 700px) {
+  .poster-rule-v { display: none; }
+  .poster-text { left: 8%; top: 44%; width: 84%; }
+  .poster-text h1 { font-size: 16vmin; }
+  #hud { display: none; }
+}

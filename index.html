@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>voyager 1 — by sorkthropic</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- The app runs underneath from the first moment; the landing is a
+       Bauhaus poster laid over it like a veil. -->
+
+  <!-- Bauhaus frame around the viewport: thick rules + a corner square -->
+  <div id="frame-top"></div>
+  <div id="frame-left"></div>
+  <div id="frame-corner"></div>
+
+  <!-- Live readouts, styled like a letterpress data strip -->
+  <div id="hud">
+    <div class="hud-block" id="hud-time">
+      <span class="hud-label">now</span>
+      <span class="hud-value" id="hud-time-value">—</span>
+    </div>
+    <div class="hud-block accent-yellow" id="hud-sun">
+      <span class="hud-label">from the sun</span>
+      <span class="hud-value" id="hud-sun-value">—</span>
+    </div>
+    <div class="hud-block accent-blue" id="hud-earth">
+      <span class="hud-label">from earth</span>
+      <span class="hud-value" id="hud-earth-value">—</span>
+    </div>
+    <div class="hud-block accent-red" id="hud-light">
+      <span class="hud-label">one-way radio</span>
+      <span class="hud-value" id="hud-light-value">—</span>
+    </div>
+    <div class="hud-block" id="hud-speed">
+      <span class="hud-label">speed</span>
+      <span class="hud-value" id="hud-speed-value">—</span>
+    </div>
+  </div>
+
+  <!-- Kandinsky's form + colour lesson, used as the map legend -->
+  <div id="legend">
+    <div><i class="sym sym-circle"></i> planet</div>
+    <div><i class="sym sym-square"></i> dwarf planet</div>
+    <div><i class="sym sym-triangle"></i> voyager 1</div>
+  </div>
+
+  <div id="hint">drag to look &middot; scroll to travel &middot; click a name to visit</div>
+
+  <!-- Labels for every body get injected here by app.js -->
+  <div id="labels"></div>
+
+  <!-- The landing poster -->
+  <div id="landing">
+    <div class="poster">
+      <div class="poster-rule-v"></div>
+      <div class="poster-circle"></div>
+      <div class="poster-bar">
+        <div class="poster-triangle"></div>
+      </div>
+      <div class="poster-square"></div>
+
+      <div class="poster-text">
+        <div class="name">sorkthropic</div>
+        <h1>voyager&nbsp;1</h1>
+        <p class="purpose">
+          the live position of the farthest machine humanity has ever built —
+          computed from its real nasa-tracked trajectory, right now, as you
+          read this. every planet, every belt, every distance at true scale.
+          nothing compressed.
+        </p>
+        <div class="poster-data" id="poster-data">
+          <span id="poster-au">— au</span> from the sun &middot;
+          a radio call takes <span id="poster-light">—</span> one way
+        </div>
+        <button class="enter" id="enterBtn">enter</button>
+      </div>
+
+      <div class="poster-vertical">weimar &middot; dessau &middot; interstellar space</div>
+      <div class="poster-year">1977&ndash;&infin;</div>
+    </div>
+  </div>
+
+  <script src="vendor/three.min.js"></script>
+  <script src="ephemeris.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
