@@ -87,6 +87,47 @@ expectClose(status.lightHoursFromEarth, 23.7, 0.15,
   "radio from voyager 1 takes ~23.7 hours to reach earth");
 expectClose(status.missionYears, 48.87, 0.02, "voyager 1 has flown ~48.9 years");
 
+// --- Voyager 1's early years (the tracked table) ----------------------------
+// NASA vectors at the two famous flyby moments. The table holds daily
+// positions, so reading between the days is allowed a small interpolation
+// error — worst during the frantic hours nearest a giant planet.
+expectVec(E.voyager1PositionAu(2443938.0),
+  [-3.221858726477680, 4.196412799203282, 0.05480964676862330], 0.01,
+  "voyager 1 at the jupiter flyby (1979-03-05) matches NASA");
+expectVec(E.voyager1PositionAu(2444556.490277778),
+  [-9.501704474678858, -0.3647007351541715, 0.3828826020013893], 0.01,
+  "voyager 1 at the saturn flyby (1980-11-12) matches NASA");
+
+// The quiet decades are tracked too: NASA vectors mid-cruise.
+expectVec(E.voyager1PositionAu(2449718.5),
+  [-18.07506082727154, -44.68140890027095, 32.41661612421763], 2e-4,
+  "voyager 1 on 1995-01-01 matches NASA");
+expectVec(E.voyager1PositionAu(2453005.5),
+  [-22.17438323640828, -71.11699241827927, 51.52125397877035], 2e-4,
+  "voyager 1 on 2004-01-01 matches NASA");
+
+// The cruise table and the hyperbola must agree where they hand over
+// (2026-07-15), or the trail would show a kink that never happened.
+{
+  const a = E.voyager1PositionAu(E.VOYAGER1_TABLE_END_JD);
+  const b = E.voyager1HyperbolicPositionAu(E.VOYAGER1_TABLE_END_JD);
+  expectVec(a, [b.x, b.y, b.z], 1e-3, "cruise table and hyperbola agree at the 2026 handover");
+}
+
+// Before the table begins (launch era) we clamp to its first entry
+// instead of inventing positions.
+{
+  const first = E.voyager1EarlyPositionAu(E.VOYAGER1_EARLY.startJd);
+  const before = E.voyager1PositionAu(E.VOYAGER1_EARLY.startJd - 500);
+  expectVec(before, [first.x, first.y, first.z], 1e-12,
+    "before 1977-09-06 the position clamps to the first tracked point");
+}
+
+// Early-era speed comes from the table itself: right after launch Voyager
+// was still deep in the Sun's grip, moving far faster than today.
+expectClose(E.voyager1SpeedKmS(2443400.5), 35, 8,
+  "shortly after launch voyager 1 moved ~30-40 km/s");
+
 // A body on a closed orbit must come back: Pluto after one full period.
 const p0 = E.smallBodyPositionAu(E.SMALL_BODIES.pluto, JD);
 const p1 = E.smallBodyPositionAu(E.SMALL_BODIES.pluto, JD + 360 / E.SMALL_BODIES.pluto.n);
