@@ -443,6 +443,7 @@ function backToSystem() {
 const pointers = new Map();
 let pinchStartDist = 0, pinchStartView = 0;
 renderer.domElement.addEventListener("pointerdown", (e) => {
+  if (ride.active) endRide(false);
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (pointers.size === 2) {
     const [a, b] = [...pointers.values()];
@@ -470,12 +471,13 @@ window.addEventListener("pointermove", (e) => {
   p.x = e.clientX; p.y = e.clientY;
 });
 window.addEventListener("wheel", (e) => {
+  if (ride.active) endRide(false);
   view.wantDistance *= Math.exp(e.deltaY * 0.0012);
   view.wantDistance = Math.min(view.maxDistance, Math.max(view.minDistance, view.wantDistance));
 }, { passive: true });
 
 window.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") backToSystem();
+  if (e.key === "Escape") { if (ride.active) endRide(false); else backToSystem(); }
   if (e.key === "ArrowLeft") nudgeRate(-1);
   if (e.key === "ArrowRight") nudgeRate(+1);
   if (e.key.toLowerCase() === "l") setLive();
@@ -493,6 +495,94 @@ for (const chip of document.querySelectorAll(".chip")) {
     else jumpTo(TIME_EVENTS[ev].ms);
   });
 }
+
+// --- Ride the signal: earth → voyager 1 at (scaled) radio speed -------------
+// A command really does leave earth by radio and arrive at voyager ~23 hours
+// later. Here you fly with it: one light-hour every two seconds, straight
+// line, true scale. Nearly all of the ride is empty black — that is the honest
+// part. A caption names the region you are crossing; esc or a click bails out.
+
+const RIDE_SECONDS_PER_LIGHT_HOUR = 2;
+const RIDE_ZONES = [   // [outer edge in au from the sun, caption]
+  [2.0,      "leaving the rocky worlds"],
+  [3.4,      "the asteroid belt"],
+  [5.6,      "crossing jupiter's orbit"],
+  [10.1,     "crossing saturn's orbit"],
+  [19.9,     "crossing uranus' orbit"],
+  [30.5,     "crossing neptune's orbit"],
+  [50,       "the kuiper belt"],
+  [94,       "the scattered dark — hours of nothing"],
+  [121.6,    "past the termination shock"],
+  [Infinity, "interstellar space"],
+];
+
+const ride = {
+  active: false, t: 0, duration: 1, lightHours: 0,
+  from: new THREE.Vector3(), to: new THREE.Vector3(),
+  btn: document.getElementById("ride-btn"),
+  captionEl: document.getElementById("ride-caption"),
+  zoneEl: document.getElementById("ride-zone"),
+  counterEl: document.getElementById("ride-counter"),
+};
+
+function startRide() {
+  // the ride follows the sim clock's sky; before launch there is no voyager
+  if (Ephem.jdTdbFromDate(new Date(clock.simMs)) < LAUNCH_JD) setLive();
+  const jd = Ephem.jdTdbFromDate(new Date(clock.simMs));
+  ride.from.copy(toVec3(Ephem.planetPositionAu(Ephem.PLANETS.earth, jd)));
+  ride.to.copy(toVec3(Ephem.voyager1PositionAu(jd)));
+  ride.lightHours = ride.from.distanceTo(ride.to) * Ephem.AU_KM / 299792.458 / 3600;
+  ride.duration = Math.max(10, ride.lightHours * RIDE_SECONDS_PER_LIGHT_HOUR);
+  ride.t = 0;
+  ride.active = true;
+  hideInfoCard();
+  ride.btn.style.display = "none";
+  ride.captionEl.classList.remove("hidden");
+}
+
+function endRide(arrived) {
+  ride.active = false;
+  ride.btn.style.display = "";
+  ride.captionEl.classList.add("hidden");
+  // hand the orbit camera a matching pose so there is no jump
+  const camHeight = Math.min(2, 0.05 + camera.position.distanceTo(ride.from) * 0.1);
+  view.polar = 0.15;
+  if (arrived) {
+    focusOn(voyager);
+    view.anchor.copy(ride.to);
+    view.distance = camHeight;
+  } else {
+    view.target = sunBody;
+    view.anchor.copy(camera.position);
+    view.distance = camHeight;
+    view.wantDistance = 430;
+    hideInfoCard();
+  }
+}
+
+// place the camera for this frame of the ride; returns the caption pieces
+function updateRide(realDt) {
+  ride.t += realDt;
+  const u = Math.min(1, ride.t / ride.duration);
+  const p = u * u * (3 - 2 * u);            // smooth start and landing
+  const P = ride.from.clone().lerp(ride.to, p);
+  const fromEarthAu = P.distanceTo(ride.from);
+  const h = Math.min(2, 0.05 + fromEarthAu * 0.1);   // drift gently above the road
+  camera.position.set(P.x, P.y, P.z + h);
+  camera.lookAt(ride.to);
+
+  const rSunAu = P.length();
+  ride.zoneEl.textContent = RIDE_ZONES.find(([edge]) => rSunAu < edge)[1];
+  const lightMin = Math.round(p * ride.lightHours * 60);
+  ride.counterEl.textContent =
+    `${Math.floor(lightMin / 60)} h ${String(lightMin % 60).padStart(2, "0")} min of light` +
+    ` · ${fmt(fromEarthAu, 1)} au from earth`;
+
+  if (u >= 1) endRide(true);
+  return h;
+}
+
+ride.btn.addEventListener("click", startRide);
 
 // --- HUD --------------------------------------------------------------------
 
@@ -663,21 +753,26 @@ function animate(t) {
   voyager.mesh.visible = jd >= LAUNCH_JD;
   updateTrail(jd);
 
-  // camera: glide anchor and distance toward where they want to be
-  const ease = 1 - Math.exp(-realDt * 5);
-  view.anchor.lerp(view.target.mesh.position, ease);
-  view.distance += (view.wantDistance - view.distance) * ease;
-  const offset = new THREE.Vector3(
-    Math.sin(view.polar) * Math.cos(view.azimuth),
-    Math.sin(view.polar) * Math.sin(view.azimuth),
-    Math.cos(view.polar)
-  ).multiplyScalar(view.distance);
-  camera.position.copy(view.anchor).add(offset);
-  camera.lookAt(view.anchor);
+  // camera: mid-ride the signal drives it; otherwise glide around the anchor
+  let scaleDistance = view.distance;
+  if (ride.active) {
+    scaleDistance = updateRide(realDt);
+  } else {
+    const ease = 1 - Math.exp(-realDt * 5);
+    view.anchor.lerp(view.target.mesh.position, ease);
+    view.distance += (view.wantDistance - view.distance) * ease;
+    const offset = new THREE.Vector3(
+      Math.sin(view.polar) * Math.cos(view.azimuth),
+      Math.sin(view.polar) * Math.sin(view.azimuth),
+      Math.cos(view.polar)
+    ).multiplyScalar(view.distance);
+    camera.position.copy(view.anchor).add(offset);
+    camera.lookAt(view.anchor);
+  }
 
   if (t - lastHudUpdate > 250) { updateHud(simDate); lastHudUpdate = t; }
   updateLabels(jd);
-  updateScalebar(view.distance);
+  updateScalebar(scaleDistance);
   renderer.render(scene, camera);
 }
 requestAnimationFrame(animate);
@@ -706,6 +801,9 @@ if (location.hash.startsWith("#enter")) {
     view.anchor.copy(toVec3(wanted.getPosition(Ephem.jdTdbFromDate(new Date(clock.simMs)))));
     view.distance = view.wantDistance;
   }
+
+  // #enter&ride drops you straight onto the signal
+  if (/[&#]ride\b/.test(location.hash)) startRide();
 }
 
 window.addEventListener("resize", () => {
