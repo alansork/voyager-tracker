@@ -88,9 +88,11 @@ canvas { display: block; position: fixed; inset: 0; }
   border-right: 6.5px solid transparent;
   border-bottom: 11px solid var(--yellow);
 }
+.sym-sun { background: var(--yellow); border-radius: 50%; }
 
 #hint {
-  position: fixed; bottom: 22px; right: 26px; z-index: 20;
+  /* sits above the time strip so the two never overlap */
+  position: fixed; bottom: 68px; right: 26px; z-index: 20;
   font-size: 11px; letter-spacing: 0.18em; color: var(--paper); opacity: 0.55;
 }
 
@@ -107,6 +109,81 @@ canvas { display: block; position: fixed; inset: 0; }
 .body-label:hover { color: #fff; }
 .body-label .sym { margin-right: 0; transform: scale(0.8); }
 .body-label.is-voyager { font-size: 13px; font-weight: 700; letter-spacing: 0.2em; }
+
+/* the "now" block turns red while time-travelling — you are not in the present */
+#hud-time.time-travel { background: var(--red); color: var(--paper); }
+#hud-time.time-travel .hud-label { opacity: 0.85; }
+
+/* --- Scale bar: these pixels really are that many au ----------------------- */
+
+#scalebar {
+  position: fixed; bottom: 108px; left: 50%; transform: translateX(-50%);
+  z-index: 20; text-align: center; pointer-events: none;
+}
+#scalebar-line {
+  height: 0; border-top: 3px solid var(--paper);
+  border-left: 3px solid var(--paper); border-right: 3px solid var(--paper);
+  box-sizing: border-box; height: 9px; margin: 0 auto;
+}
+#scalebar-text {
+  font-size: 11px; letter-spacing: 0.22em; color: var(--paper);
+  margin-top: 4px; opacity: 0.8; font-variant-numeric: tabular-nums;
+}
+
+/* --- Time strip ------------------------------------------------------------ */
+
+#timestrip {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  z-index: 25; display: flex; flex-direction: column; align-items: center; gap: 0;
+}
+#time-events { display: flex; gap: 2px; }
+.chip {
+  font-family: var(--font); text-transform: lowercase;
+  font-size: 10px; letter-spacing: 0.14em;
+  background: var(--paper); color: var(--ink);
+  border: none; border-top: 4px solid var(--blue);
+  padding: 5px 10px 4px; cursor: pointer;
+}
+.chip:hover { border-top-color: var(--red); }
+.chip-live { border-top-color: var(--yellow); font-weight: 700; }
+#time-controls { display: flex; gap: 2px; margin-top: 2px; width: 100%; }
+#time-controls button {
+  font-family: var(--font); text-transform: lowercase;
+  background: var(--ink); color: var(--paper);
+  border: none; cursor: pointer; letter-spacing: 0.12em;
+  font-size: 11px; padding: 7px 12px;
+}
+#time-mode { flex: 1; font-variant-numeric: tabular-nums; }
+#time-controls button:hover { background: var(--red); }
+#time-mode.time-travel { background: var(--red); }
+
+/* --- Info card: the visiting card of a world ------------------------------- */
+
+#infocard {
+  position: fixed; right: 0; bottom: 60px; z-index: 22;
+  width: 250px; background: var(--paper); color: var(--ink);
+  border-left: 6px solid var(--red);
+  padding: 14px 16px 12px;
+  transition: transform 0.35s ease, opacity 0.35s ease;
+}
+#infocard.hidden { transform: translateX(110%); opacity: 0; pointer-events: none; }
+#infocard-close {
+  position: absolute; top: 4px; right: 6px;
+  background: none; border: none; cursor: pointer;
+  font-size: 18px; color: var(--ink); font-family: var(--font);
+}
+#infocard-kind { font-size: 10px; letter-spacing: 0.3em; opacity: 0.6; }
+#infocard h2 {
+  margin: 2px 0 8px; font-size: 26px; font-weight: 700; letter-spacing: 0.02em;
+  border-bottom: 4px solid var(--ink); padding-bottom: 6px;
+}
+#infocard p { font-size: 12px; line-height: 1.5; margin: 0 0 10px; }
+.infocard-row {
+  display: flex; justify-content: space-between; gap: 14px; font-size: 11px;
+  letter-spacing: 0.08em; padding: 3px 0; border-top: 1px solid rgba(22,19,14,0.25);
+  font-variant-numeric: tabular-nums;
+}
+.infocard-row b { font-weight: 700; text-align: right; }
 
 /* --- The landing poster ----------------------------------------------------*/
 

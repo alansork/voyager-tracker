@@ -46,10 +46,42 @@
     <div><i class="sym sym-triangle"></i> voyager 1</div>
   </div>
 
-  <div id="hint">drag to look &middot; scroll to travel &middot; click a name to visit</div>
+  <div id="hint">drag &middot; scroll or pinch &middot; click a name &middot; &larr;&rarr; time &middot; esc back</div>
 
   <!-- Labels for every body get injected here by app.js -->
   <div id="labels"></div>
+
+  <!-- A true-scale ruler: this many pixels really are this many au -->
+  <div id="scalebar"><div id="scalebar-line"></div><div id="scalebar-text">—</div></div>
+
+  <!-- Time travel, letterpress style: jump chips + a speed control -->
+  <div id="timestrip">
+    <div id="time-events">
+      <button class="chip" data-event="launch">launch &middot; 1977</button>
+      <button class="chip" data-event="jupiter">jupiter &middot; 1979</button>
+      <button class="chip" data-event="saturn">saturn &middot; 1980</button>
+      <button class="chip" data-event="shock">shock &middot; 2004</button>
+      <button class="chip" data-event="heliopause">heliopause &middot; 2012</button>
+      <button class="chip chip-live" data-event="live">now</button>
+    </div>
+    <div id="time-controls">
+      <button id="time-slower" title="backwards (&larr;)">&#9664;&#9664;</button>
+      <button id="time-mode" title="click to return to live">live &middot; real time</button>
+      <button id="time-faster" title="forwards (&rarr;)">&#9654;&#9654;</button>
+    </div>
+  </div>
+
+  <!-- The visiting card of whichever world you fly to -->
+  <div id="infocard" class="hidden">
+    <button id="infocard-close" title="back to the whole system (esc)">&times;</button>
+    <div id="infocard-kind">—</div>
+    <h2 id="infocard-name">—</h2>
+    <p id="infocard-fact">—</p>
+    <div class="infocard-row"><span>radius</span><b id="infocard-radius">—</b></div>
+    <div class="infocard-row"><span>from the sun</span><b id="infocard-dist">—</b></div>
+    <div class="infocard-row" id="infocard-period-row"><span>one lap</span><b id="infocard-period">—</b></div>
+    <div class="infocard-row"><span>discovered</span><b id="infocard-disc">—</b></div>
+  </div>
 
   <!-- The landing poster -->
   <div id="landing">
