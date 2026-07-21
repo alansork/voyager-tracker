@@ -38,18 +38,38 @@ DONE:
   swiftshader): landing poster and scene both render, HUD numbers live,
   no console errors. `#enter` in the URL skips the poster.
 
+## Status after session 2 (2026-07-21)
+DONE (on top of session 1):
+- Time travel: sim clock drives everything; chips jump to launch /
+  jupiter / saturn / shock / heliopause / now; ◀◀ ▶▶ speed ladder
+  ±(day…decade)/s; ← → keys; "l" = live; HUD "now" block turns red
+  while off the present. Voyager mesh+label hidden before launch;
+  trail splits bright-flown / faint-ahead at the clock's moment.
+- Saturn's rings, true scale (C, B, cassini gap, A), tilted to the
+  real pole vector.
+- Per-body visiting card (fact, radius, live distance, period,
+  discovery) incl. the sun; labels declutter by priority each frame;
+  honest scale bar; camera glide + two-finger pinch; sun is a
+  clickable body.
+- "ride the signal": camera flight earth → voyager 1 at 1 light-hour
+  per 2 s (~47 s today), red zone captions, light-time counter,
+  esc/click cancels, arrival focuses voyager. Planets pass in ~13 s,
+  then ~30 s of true-scale emptiness — intentional.
+- Shareable links: `#enter&date=1980-11-12&visit=saturn`, `#enter&ride`.
+
 ## Roadmap
-Session 2: interactive polish (labels overlap near the sun when zoomed
-  out — declutter by distance; camera feel; mobile). Add a guided "journey"
-  — camera flight Earth → Voyager at true scale to feel the distance.
-  Saturn needs rings. Add time controls (see the flyby years).
-Session 3: richer Bauhaus HUD (info card per body when visited: real
-  facts, discovery, radii), label decluttering by distance, Voyager
-  mission timeline strip (launch → Jupiter 1979 → Saturn 1980 →
-  termination shock 2004 → heliopause 2012 → today), maybe sound.
-Session 4: polish, mobile, README screenshots, create GitHub repo
-  alansork/voyager-tracker + GitHub Pages deploy, link from
-  sorkthropic-site.
+Session 3: mobile pass (touch targets, timestrip on small screens),
+  maybe sound, richer landing poster stats, any polish sorkthropic asks
+  for after playing with it.
+Session 4: README screenshots, GitHub Pages deploy (repo
+  alansork/voyager-tracker already exists), link from sorkthropic-site.
+
+## Headless testing recipe (works on this Mac)
+Chrome `--headless=new --use-angle=swiftshader --enable-unsafe-swiftshader
+--no-sandbox --screenshot=... --virtual-time-budget=9000` on
+`index.html#enter[&date=…][&visit=…][&ride]`. Note: virtual time freezes
+after load, so the ride only advances a few seconds in screenshots —
+verify ride pacing with a node simulation of the zone math instead.
 
 ## Data provenance (for honesty in the UI)
 All ephemeris constants fetched live from NASA/JPL Horizons API on
