@@ -13,12 +13,13 @@
  */
 
 :root {
-  --paper: #ede8dc;        /* aged poster paper — now the ink, printed on night */
+  /* the whole palette is sun-faded, like a file kept fifty years */
+  --paper: #e6dcc4;        /* yellowed poster paper — the ink, printed on night */
   --ink: #16130e;          /* letterpress black */
-  --panel: #211c14;        /* dark panel surface: black paper, warm like the ink */
-  --red: #c62f1e;          /* bauhaus red */
-  --blue: #21489c;         /* bauhaus blue */
-  --yellow: #e3a71b;       /* bauhaus yellow */
+  --panel: #221d15;        /* dark panel surface: black paper, warm like the ink */
+  --red: #b83a25;          /* faded print red */
+  --blue: #2c4d92;         /* faded print blue */
+  --yellow: #d9a02b;       /* ochre'd yellow */
   --font: "Futura", "Jost", "Century Gothic", "Avenir Next", sans-serif;
 }
 
@@ -35,21 +36,38 @@ html, body {
 }
 
 /* touch-action: none lets our own pinch code receive touch pointers instead
-   of the browser hijacking them for page zoom */
-canvas { display: block; position: fixed; inset: 0; touch-action: none; }
+   of the browser hijacking them for page zoom.
+   The sepia filter ages the photographic plates themselves. */
+canvas {
+  display: block; position: fixed; inset: 0; touch-action: none;
+  filter: sepia(0.24) brightness(0.96) contrast(0.97);
+}
 
 /* --- The dust: everything prints through the same worn film --------------- */
 
 #grain {
   position: fixed; inset: 0; z-index: 60; pointer-events: none;
-  opacity: 0.11; mix-blend-mode: screen;
+  opacity: 0.16; mix-blend-mode: screen;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='260' height='260' filter='url(%23n)'/></svg>");
 }
 #vignette {
   position: fixed; inset: 0; z-index: 12; pointer-events: none;
   background:
-    radial-gradient(ellipse at 50% 45%, transparent 52%, rgba(0,0,0,0.55) 100%),
-    linear-gradient(rgba(227,167,27,0.045), rgba(227,167,27,0.045));
+    radial-gradient(ellipse at 50% 45%, transparent 44%, rgba(0, 0, 0, 0.68) 100%),
+    linear-gradient(rgba(217, 160, 43, 0.07), rgba(217, 160, 43, 0.07));
+}
+
+/* stains of the decades: foxing spots and a coffee ring, always in the
+   same places — this particular copy has lived */
+#stains {
+  position: fixed; inset: 0; z-index: 61; pointer-events: none; opacity: 0.75;
+  background:
+    radial-gradient(circle at 12% 78%, rgba(122, 88, 38, 0.10) 0 4%, transparent 5%),
+    radial-gradient(circle at 87% 14%, rgba(122, 88, 38, 0.07) 0 6%, transparent 7%),
+    radial-gradient(circle at 71% 88%, rgba(100, 70, 30, 0.08) 0 3%, transparent 4%),
+    radial-gradient(circle at 31% 8%, rgba(122, 88, 38, 0.05) 0 9%, transparent 10%),
+    /* the coffee ring: a thin annulus, darker where the cup tipped */
+    radial-gradient(circle at 82% 72%, transparent 0 6.1%, rgba(96, 62, 22, 0.16) 6.4% 7.1%, rgba(96, 62, 22, 0.05) 7.3% 7.7%, transparent 8%);
 }
 
 /* --- The Bauhaus frame around the viewport ------------------------------- */
@@ -104,7 +122,9 @@ canvas { display: block; position: fixed; inset: 0; touch-action: none; }
   padding: 10px 16px; font-size: 12px; letter-spacing: 0.1em;
   display: flex; flex-direction: column; gap: 6px;
   border-top: 6px solid var(--paper);
+  transform: rotate(-0.5deg);          /* pinned on slightly crooked */
 }
+.legend-head { font-size: 9px; letter-spacing: 0.28em; opacity: 0.5; }
 .sym { display: inline-block; width: 11px; height: 11px; margin-right: 8px; }
 .sym-circle { background: var(--red); border-radius: 50%; }
 .sym-square { background: var(--blue); }
@@ -120,6 +140,14 @@ canvas { display: block; position: fixed; inset: 0; touch-action: none; }
   /* sits above the time strip so the two never overlap */
   position: fixed; bottom: 68px; right: 26px; z-index: 20;
   font-size: 11px; letter-spacing: 0.18em; color: var(--paper); opacity: 0.55;
+}
+
+/* the archivist's pencil down the left rule */
+#archive-mark {
+  position: fixed; left: 10px; top: 34px; z-index: 20;
+  writing-mode: vertical-rl;
+  font-size: 9px; letter-spacing: 0.32em;
+  color: var(--paper); opacity: 0.4;
 }
 
 /* --- Labels floating over the 3d scene ------------------------------------*/
@@ -205,6 +233,7 @@ canvas { display: block; position: fixed; inset: 0; touch-action: none; }
   border-top: 6px solid var(--ink);
   padding: 9px 14px 8px; font-size: 11px; letter-spacing: 0.16em;
   display: flex; align-items: center; gap: 9px;
+  transform: rotate(0.4deg);
 }
 #ride-btn:hover { background: var(--red); color: var(--paper); }
 #ride-btn .sym { transform: rotate(90deg) scale(0.9); }
@@ -287,7 +316,8 @@ canvas { display: block; position: fixed; inset: 0; touch-action: none; }
   padding: 14px 16px 12px;
   transition: transform 0.35s ease, opacity 0.35s ease;
 }
-#infocard.hidden { transform: translateX(110%); opacity: 0; pointer-events: none; }
+#infocard { transform: rotate(-0.4deg); }
+#infocard.hidden { transform: translateX(110%) rotate(-0.4deg); opacity: 0; pointer-events: none; }
 #infocard-close {
   position: absolute; top: 4px; right: 6px;
   background: none; border: none; cursor: pointer;
@@ -314,6 +344,7 @@ canvas { display: block; position: fixed; inset: 0; touch-action: none; }
   background: var(--panel);
   border-left: 6px solid var(--yellow);
   padding: 10px 12px 10px;
+  transform: rotate(-0.3deg);
 }
 #craft-view.hidden { display: none; }
 #craft-head {
@@ -351,11 +382,40 @@ canvas { display: block; position: fixed; inset: 0; touch-action: none; }
 
 .poster { position: absolute; inset: 0; overflow: hidden; }
 
+/* the sheet was folded twice for the file: one crease each way */
+.poster::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(180deg,
+      transparent calc(54% - 2px), rgba(0, 0, 0, 0.4) calc(54% - 1px),
+      rgba(230, 220, 196, 0.07) 54%, transparent calc(54% + 2px)),
+    linear-gradient(90deg,
+      transparent calc(30% - 2px), rgba(0, 0, 0, 0.35) calc(30% - 1px),
+      rgba(230, 220, 196, 0.06) 30%, transparent calc(30% + 2px));
+}
+
+/* an approval stamp, pressed on in a hurry */
+.poster-stamp {
+  position: absolute; left: 13%; bottom: 9%;
+  pointer-events: none;
+  transform: rotate(-7deg);
+  border: 2px solid var(--red); color: var(--red);
+  padding: 8px 14px; text-align: center;
+  font-size: 10px; letter-spacing: 0.28em; line-height: 1.7;
+  opacity: 0.72;
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='r'><feTurbulence type='fractalNoise' baseFrequency='0.16' numOctaves='3'/><feColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0.6 0.6 0.6 0.4 0'/></filter><rect width='120' height='120' filter='url(%23r)'/></svg>");
+  mask-size: 120px 120px;
+}
+
 /* geometry: a red sun, a black trajectory bar, a yellow voyager triangle */
 .poster-circle {
   position: absolute; left: 8%; top: 12%;
   width: 34vmin; height: 34vmin; border-radius: 50%;
-  background: var(--red);
+  /* halftone dots over the red: printed on a cheap press */
+  background:
+    radial-gradient(rgba(0, 0, 0, 0.16) 1px, transparent 1.6px),
+    var(--red);
+  background-size: 7px 7px, auto;
   box-shadow: inset -3vmin -4vmin 9vmin rgba(0, 0, 0, 0.35);  /* aged ink */
 }
 .poster-bar {

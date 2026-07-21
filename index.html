@@ -43,6 +43,7 @@
 
   <!-- Kandinsky's form + colour lesson, used as the map legend -->
   <div id="legend">
+    <div class="legend-head">fig. 1 &middot; key to symbols</div>
     <div><i class="sym sym-circle"></i> planet</div>
     <div><i class="sym sym-square"></i> dwarf planet</div>
     <div><i class="sym sym-triangle"></i> voyager 1</div>
@@ -53,9 +54,12 @@
   <!-- Labels for every body get injected here by app.js -->
   <div id="labels"></div>
 
-  <!-- The dust: film grain over everything, a vignette behind the ui -->
+  <!-- The dust: film grain over everything, a vignette behind the ui,
+       and the stains this particular copy has collected since 1977 -->
   <div id="vignette"></div>
   <div id="grain"></div>
+  <div id="stains"></div>
+  <div id="archive-mark">mission file vg-1 &middot; jet propulsion laboratory &middot; archive print</div>
 
   <!-- A true-scale ruler: this many pixels really are this many au -->
   <div id="scalebar"><div id="scalebar-line"></div><div id="scalebar-text">—</div></div>
@@ -67,7 +71,7 @@
   <button id="record-btn" title="the golden record (g)"></button>
   <div id="record-panel" class="hidden">
     <button id="record-close" title="close (esc)">&times;</button>
-    <div class="record-kind">bolted to the side of the ship</div>
+    <div class="record-kind">fig. 3 &middot; bolted to the side of the ship</div>
     <h2>the golden record</h2>
     <p>
       a 12-inch gold-plated copper disc — a message in a bottle, thrown
@@ -122,7 +126,7 @@
        be seen there — this side panel shows the machine itself instead. -->
   <div id="craft-view" class="hidden">
     <div id="craft-head">
-      <span>inspection view &middot; voyager 1</span>
+      <span>fig. 2 &middot; voyager 1 &middot; general arrangement</span>
       <span class="craft-note">on the map it stays true scale: 4 m &mdash; smaller than a pixel</span>
     </div>
     <canvas id="craft-canvas"></canvas>
@@ -161,6 +165,7 @@
       <div class="poster-vertical">pasadena &middot; cape canaveral &middot; interstellar space</div>
       <div class="poster-year">1977&ndash;&infin;</div>
       <div class="poster-mark">the grand tour &middot; craft n&deg; 1</div>
+      <div class="poster-stamp">jet propulsion laboratory<br>mission file vg-1 &middot; cleared for flight<br>sep 05 1977</div>
     </div>
   </div>
 
