@@ -38,6 +38,20 @@ html, body {
    of the browser hijacking them for page zoom */
 canvas { display: block; position: fixed; inset: 0; touch-action: none; }
 
+/* --- The dust: everything prints through the same worn film --------------- */
+
+#grain {
+  position: fixed; inset: 0; z-index: 60; pointer-events: none;
+  opacity: 0.11; mix-blend-mode: screen;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='260' height='260' filter='url(%23n)'/></svg>");
+}
+#vignette {
+  position: fixed; inset: 0; z-index: 12; pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 45%, transparent 52%, rgba(0,0,0,0.55) 100%),
+    linear-gradient(rgba(227,167,27,0.045), rgba(227,167,27,0.045));
+}
+
 /* --- The Bauhaus frame around the viewport ------------------------------- */
 
 #frame-top {
@@ -122,6 +136,18 @@ canvas { display: block; position: fixed; inset: 0; touch-action: none; }
 .body-label .sym { margin-right: 0; transform: scale(0.8); }
 .body-label.is-voyager { font-size: 13px; font-weight: 700; letter-spacing: 0.2em; }
 
+/* year stamps along voyager's flown road */
+.trail-tick {
+  position: absolute; transform: translate(-50%, -140%);
+  font-size: 9px; letter-spacing: 0.14em; color: var(--yellow);
+  opacity: 0.75; pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+.trail-tick::after {
+  content: ""; display: block; width: 1px; height: 5px;
+  background: var(--yellow); margin: 1px auto 0;
+}
+
 /* the "now" block turns red while time-travelling — you are not in the present */
 #hud-time.time-travel { background: var(--red); color: var(--paper); }
 #hud-time.time-travel .hud-label { opacity: 0.85; }
@@ -147,6 +173,7 @@ canvas { display: block; position: fixed; inset: 0; touch-action: none; }
 #timestrip {
   position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
   z-index: 25; display: flex; flex-direction: column; align-items: center; gap: 0;
+  width: max-content; max-width: 96vw;   /* one row on desktop, wraps on phones */
 }
 #time-events { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; }
 .chip {
@@ -295,6 +322,7 @@ canvas { display: block; position: fixed; inset: 0; touch-action: none; }
   position: absolute; left: 8%; top: 12%;
   width: 34vmin; height: 34vmin; border-radius: 50%;
   background: var(--red);
+  box-shadow: inset -3vmin -4vmin 9vmin rgba(0, 0, 0, 0.35);  /* aged ink */
 }
 .poster-bar {
   position: absolute; left: -12%; top: 30%;
@@ -331,6 +359,8 @@ canvas { display: block; position: fixed; inset: 0; touch-action: none; }
   margin: 0 0 2.5vmin;
   font-size: 9vmin; line-height: 0.95; font-weight: 700;
   letter-spacing: -0.02em;
+  /* a red pass slightly off-register, like a worn two-colour print run */
+  text-shadow: 0.35vmin 0.28vmin 0 rgba(198, 47, 30, 0.55);
 }
 .poster-text .purpose {
   font-size: 15px; line-height: 1.55; margin: 0 0 3vmin;

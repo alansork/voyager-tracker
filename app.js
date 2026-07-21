@@ -403,6 +403,20 @@ const trail = { jds: [], line: null, faint: null };
   scene.add(trail.line);
 }
 
+// --- Year marks along the flown road ----------------------------------------
+// Little yellow stamps every five years turn the trail into a route map:
+// you can see the ship slow down as the sun's grip fades astern.
+
+const trailTicks = [];
+for (let year = 1980; year <= 2025; year += 5) {
+  const jd = Ephem.jdTdbFromDate(new Date(Date.UTC(year, 0, 1)));
+  const el = document.createElement("div");
+  el.className = "trail-tick";
+  el.textContent = year;
+  labelLayer.appendChild(el);
+  trailTicks.push({ jd, pos: toVec3(Ephem.voyager1PositionAu(jd)), el });
+}
+
 // show only the flown part of the bright line: binary-search the clock's
 // moment in the sample list and cut the draw there
 function updateTrail(jd) {
@@ -769,6 +783,27 @@ function updateLabels(simJd) {
     b.labelEl.style.display = "flex";
     b.labelEl.style.left = x + "px";
     b.labelEl.style.top = y + "px";
+  }
+
+  // year stamps come last: they only appear where there is room, and only
+  // on the part of the road already flown at the clock's moment
+  for (const tick of trailTicks) {
+    if (tick.jd > simJd) { tick.el.style.display = "none"; continue; }
+    projected.copy(tick.pos).project(camera);
+    const onScreen = projected.z < 1 &&
+      projected.x > -1.02 && projected.x < 1.02 &&
+      projected.y > -1.02 && projected.y < 1.02;
+    if (!onScreen) { tick.el.style.display = "none"; continue; }
+    const x = (projected.x + 1) / 2 * window.innerWidth;
+    const y = (1 - projected.y) / 2 * window.innerHeight;
+    const rect = { x0: x - 20, y0: y - 9, x1: x + 20, y1: y + 9 };
+    const collides = placedRects.some((r) =>
+      rect.x0 < r.x1 && rect.x1 > r.x0 && rect.y0 < r.y1 && rect.y1 > r.y0);
+    if (collides) { tick.el.style.display = "none"; continue; }
+    placedRects.push(rect);
+    tick.el.style.display = "block";
+    tick.el.style.left = x + "px";
+    tick.el.style.top = y + "px";
   }
 }
 
