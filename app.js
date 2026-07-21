@@ -950,8 +950,10 @@ function showInfoCard(body) {
   if (body.kind === "voyager") {
     card.fact.textContent = VOYAGER_FACTS[factIndex];
     startFactCycle(card.fact);
+    showCraft();
   } else {
     stopFactCycle();
+    hideCraft();
     card.fact.textContent = body.fact || "";
   }
   card.radius.textContent = body.kind === "voyager" ? "~4 m across"
@@ -967,7 +969,120 @@ function showInfoCard(body) {
   card.disc.textContent = body.discovered || "—";
   card.el.classList.remove("hidden");
 }
-function hideInfoCard() { card.body = null; card.el.classList.add("hidden"); stopFactCycle(); }
+function hideInfoCard() {
+  card.body = null; card.el.classList.add("hidden");
+  stopFactCycle(); hideCraft();
+}
+
+// --- Voyager 1 up close ------------------------------------------------------
+// The map never lies about scale, so a 4 m machine 171 au away simply cannot
+// be seen there. This panel is a second, tiny 3d scene: the craft built part
+// by real part, one hard sun on it, slowly turning — like a workshop model.
+
+const craft = {
+  el: document.getElementById("craft-view"),
+  canvas: document.getElementById("craft-canvas"),
+  renderer: null, scene: null, camera: null, group: null,
+};
+
+// a thin cylinder from a to b — booms, struts, antennas
+function craftRod(a, b, r, color) {
+  const dir = new THREE.Vector3().subVectors(b, a);
+  const len = dir.length();
+  const mesh = new THREE.Mesh(
+    new THREE.CylinderGeometry(r, r, len, 8),
+    new THREE.MeshLambertMaterial({ color })
+  );
+  mesh.position.copy(a).addScaledVector(dir, 0.5);
+  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
+  return mesh;
+}
+
+function buildCraft() {
+  const group = new THREE.Group();
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+  const add = (m) => { group.add(m); return m; };
+  const matte = (color) => new THREE.MeshLambertMaterial({ color });
+
+  // the ten-sided electronics bus, wrapped in dark blankets
+  const bus = add(new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 0.47, 10), matte(0x35322c)));
+  bus.geometry.rotateZ(Math.PI / 2);                   // axis to +x
+
+  // the 3.7 m high-gain dish: a lathe parabola opening toward earth (+x)
+  const profile = [];
+  for (let i = 0; i <= 20; i++) {
+    const r = (i / 20) * 1.85;
+    profile.push(new THREE.Vector2(r, -0.42 * (r / 1.85) ** 2));
+  }
+  const dish = add(new THREE.Mesh(
+    new THREE.LatheGeometry(profile, 44),
+    new THREE.MeshLambertMaterial({ color: 0xd9d4c8, side: THREE.DoubleSide })));
+  dish.geometry.rotateZ(-Math.PI / 2);
+  dish.position.x = 0.95;
+
+  // feed horn on its strut, at the dish focus
+  add(craftRod(V(0.95, 0, 0), V(1.72, 0, 0), 0.03, 0x888478));
+  const feed = add(new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.3, 12), matte(0x9a958a)));
+  feed.geometry.rotateZ(Math.PI / 2);                  // apex toward the dish
+  feed.position.x = 1.72;
+
+  // rtg boom: three plutonium batteries, black as stove pipes
+  add(craftRod(V(0, -0.8, 0), V(0, -2.95, -0.4), 0.025, 0x8a857a));
+  for (let i = 0; i < 3; i++) {
+    const rtg = add(new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.52, 12), matte(0x14120f)));
+    rtg.position.set(0, -1.45 - i * 0.55, -0.16 - i * 0.06);
+  }
+
+  // science boom with the scan platform: the cameras that shot the flybys
+  add(craftRod(V(0, 0.8, 0), V(0, 2.6, 0.1), 0.025, 0x8a857a));
+  const platform = add(new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.4, 0.3), matte(0x4a463e)));
+  platform.position.set(0, 2.7, 0.12);
+  const cam = add(new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.4, 10), matte(0x23211d)));
+  cam.geometry.rotateZ(Math.PI / 2);
+  cam.position.set(0.28, 2.78, 0.2);
+
+  // the 13 m magnetometer boom, thin as a fishing rod
+  add(craftRod(V(0, 0, 0.25), V(-5.6, 1.4, 1.5), 0.012, 0xb5ad9c));
+
+  // the two 10 m whip antennas of the radio experiment, in a wide v
+  add(craftRod(V(-0.3, 0, -0.2), V(-3.4, -1.7, -1.3), 0.01, 0x9a958a));
+  add(craftRod(V(-0.3, 0, -0.2), V(-3.4, 1.7, -1.3), 0.01, 0x9a958a));
+
+  // and the golden record, bolted to the hull
+  const rec = add(new THREE.Mesh(new THREE.CircleGeometry(0.3, 24),
+    new THREE.MeshBasicMaterial({ color: 0xd8a72c })));
+  rec.position.set(0, 0.31, 0.87);
+  rec.rotation.x = -0.34;                              // face outward along the hull
+  const recDot = add(new THREE.Mesh(new THREE.CircleGeometry(0.045, 12),
+    new THREE.MeshBasicMaterial({ color: 0x35322c })));
+  recDot.position.set(0, 0.317, 0.892);
+  recDot.rotation.x = -0.34;
+
+  return group;
+}
+
+function showCraft() {
+  craft.el.classList.remove("hidden");
+  if (!craft.renderer) {
+    craft.renderer = new THREE.WebGLRenderer({ canvas: craft.canvas, antialias: true, alpha: true });
+    craft.scene = new THREE.Scene();
+    craft.camera = new THREE.PerspectiveCamera(32, 4 / 3, 0.1, 100);
+    craft.camera.up.set(0, 0, 1);
+    craft.camera.position.set(7.2, 3.7, 3.5);
+    craft.camera.lookAt(0, 0.2, 0);
+    craft.scene.add(new THREE.AmbientLight(0xfff2dd, 0.22));
+    const hard = new THREE.DirectionalLight(0xfff2dd, 1.35);  // one raw sun
+    hard.position.set(4, -2.5, 5);
+    craft.scene.add(hard);
+    craft.group = buildCraft();
+    craft.scene.add(craft.group);
+  }
+  const w = craft.canvas.clientWidth || 416;
+  craft.renderer.setSize(w, Math.round(w * 0.72), false);
+  craft.camera.aspect = 1 / 0.72;
+  craft.camera.updateProjectionMatrix();
+}
+function hideCraft() { craft.el.classList.add("hidden"); }
 
 // --- The golden record panel ------------------------------------------------
 
@@ -1108,6 +1223,12 @@ function animate(t) {
   updateLabels(jd);
   updateScalebar(scaleDistance);
   renderer.render(scene, camera);
+
+  // the workshop model turns slowly while its panel is open
+  if (craft.renderer && !craft.el.classList.contains("hidden")) {
+    craft.group.rotation.z += realDt * 0.22;
+    craft.renderer.render(craft.scene, craft.camera);
+  }
 }
 requestAnimationFrame(animate);
 
