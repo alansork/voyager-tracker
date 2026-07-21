@@ -174,7 +174,7 @@ function rateLabel() {
 const SUN_RADIUS_AU = 696000 / KM_PER_AU;
 const sunMesh = new THREE.Mesh(
   new THREE.SphereGeometry(SUN_RADIUS_AU, 48, 24),
-  new THREE.MeshBasicMaterial({ color: 0xfff0c0 })
+  new THREE.MeshBasicMaterial({ color: 0xfff0c0 })  // painted over once textures exist
 );
 scene.add(sunMesh);
 {
@@ -270,6 +270,232 @@ function makeRing(radiusAu, colorHex, opacity) {
 scene.add(makeRing(R.terminationShockAu, COLORS.blue, 0.5));
 scene.add(makeRing(R.heliopauseAu, COLORS.red, 0.6));
 
+// --- Painted worlds ---------------------------------------------------------
+// A file:// page cannot feed photo files into webgl, so every world is
+// painted here in code, from real reference: jupiter's band colours and the
+// great red spot, mars' dark basalt plains and polar caps, neptune's storm,
+// pluto's heart. Each gets a stable seed so it always prints the same.
+
+function mulberry(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// horizontal wind streaks give banded worlds their turbulence
+function paintStreaks(g, W, H, n, rnd, light = 0.05, dark = 0.05) {
+  for (let i = 0; i < n; i++) {
+    const y = rnd() * H, len = (0.05 + rnd() * 0.25) * W, x = rnd() * W;
+    const h = 1 + rnd() * 3;
+    g.fillStyle = rnd() < 0.5 ? `rgba(255,255,255,${light})` : `rgba(0,0,0,${dark})`;
+    g.fillRect(x, y, len, h);
+    g.fillRect(x - W, y, len, h);   // wrap the seam
+  }
+}
+
+function paintBands(g, W, H, stops) {
+  const grad = g.createLinearGradient(0, 0, 0, H);
+  for (const [p, col] of stops) grad.addColorStop(p, col);
+  g.fillStyle = grad; g.fillRect(0, 0, W, H);
+}
+
+// an irregular filled patch — continent, lava plain, ice cap edge
+function paintBlob(g, cx, cy, r, color, rnd, squish = 0.75, alpha = 1) {
+  g.save(); g.globalAlpha = alpha; g.fillStyle = color; g.beginPath();
+  const pts = 10;
+  for (let i = 0; i <= pts; i++) {
+    const a = (i / pts) * Math.PI * 2;
+    const rr = r * (0.55 + rnd() * 0.6);
+    const x = cx + Math.cos(a) * rr, y = cy + Math.sin(a) * rr * squish;
+    i ? g.lineTo(x, y) : g.moveTo(x, y);
+  }
+  g.closePath(); g.fill(); g.restore();
+}
+
+const PLANET_PAINTERS = {
+  sun(g, W, H, rnd) {
+    paintBands(g, W, H, [[0, "#ffcf70"], [0.5, "#ffdd8d"], [1, "#ffcf70"]]);
+    for (let i = 0; i < 1600; i++) {           // granulation cells
+      g.fillStyle = rnd() < 0.5
+        ? `rgba(255,166,42,${0.04 + rnd() * 0.07})`
+        : `rgba(255,240,190,${0.04 + rnd() * 0.07})`;
+      g.beginPath();
+      g.arc(rnd() * W, rnd() * H, 1 + rnd() * 3, 0, Math.PI * 2); g.fill();
+    }
+    for (let i = 0; i < 3; i++) {              // a small sunspot group
+      const x = W * (0.3 + rnd() * 0.4), y = H * (0.35 + rnd() * 0.3), r = 3 + rnd() * 5;
+      g.fillStyle = "rgba(190,110,30,0.8)";
+      g.beginPath(); g.arc(x, y, r * 1.8, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "#7a3f0c";
+      g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+    }
+  },
+
+  mercury(g, W, H, rnd) {
+    paintBands(g, W, H, [[0, "#9a938a"], [0.5, "#8f8880"], [1, "#847d75"]]);
+    for (let i = 0; i < 170; i++) {            // craters: dark floor, lit rim
+      const x = rnd() * W, y = rnd() * H, r = 2 + rnd() * 9;
+      g.fillStyle = `rgba(80,74,66,${0.25 + rnd() * 0.3})`;
+      g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = "rgba(190,184,175,0.45)"; g.lineWidth = 1;
+      g.beginPath(); g.arc(x, y, r, Math.PI * 0.9, Math.PI * 1.9); g.stroke();
+    }
+  },
+
+  venus(g, W, H, rnd) {
+    paintBands(g, W, H, [[0, "#e8d6ac"], [0.5, "#ddc089"], [1, "#e2cfa2"]]);
+    for (let i = 0; i < 150; i++) {            // sulphuric cloud chevrons
+      const y = rnd() * H;
+      g.strokeStyle = rnd() < 0.6
+        ? "rgba(246,232,196,0.12)" : "rgba(170,140,80,0.10)";
+      g.lineWidth = 2 + rnd() * 5;
+      g.beginPath();
+      const x0 = rnd() * W, len = W * (0.1 + rnd() * 0.2);
+      const bow = (y / H - 0.5) * 60;          // v-shape opens from the equator
+      g.moveTo(x0, y);
+      g.quadraticCurveTo(x0 + len / 2, y + bow, x0 + len, y);
+      g.stroke();
+    }
+  },
+
+  earth(g, W, H, rnd) {
+    paintBands(g, W, H, [[0, "#33608f"], [0.5, "#1c4a80"], [1, "#33608f"]]);
+    const land = [                              // rough real places
+      [0.545, 0.50, 0.085, "#7a7a45"],          // africa
+      [0.62, 0.28, 0.15, "#6d7040"],            // eurasia
+      [0.22, 0.30, 0.10, "#657043"],            // north america
+      [0.30, 0.63, 0.062, "#57713e"],           // south america
+      [0.845, 0.645, 0.048, "#8a7847"],         // australia
+    ];
+    for (const [fx, fy, fr, col] of land) {
+      paintBlob(g, fx * W, fy * H, fr * W, col, rnd, 0.8);
+      paintBlob(g, fx * W, fy * H, fr * W * 0.5, "#6a6238", rnd, 0.8, 0.5);
+    }
+    paintBlob(g, 0.36 * W, 0.14 * H, 0.035 * W, "#dfe6ea", rnd, 0.7);  // greenland
+    g.fillStyle = "#e8edf1";                     // polar ice
+    g.fillRect(0, 0, W, H * 0.035); g.fillRect(0, H * 0.945, W, H * 0.055);
+    for (let i = 0; i < 26; i++) {
+      paintBlob(g, rnd() * W, H * (rnd() < 0.5 ? 0.045 : 0.94), 9 + rnd() * 12, "#e8edf1", rnd, 0.5);
+    }
+    g.fillStyle = "rgba(255,255,255,0.55)";      // clouds
+    for (let i = 0; i < 110; i++) {
+      g.save();
+      g.translate(rnd() * W, rnd() * H);
+      g.rotate((rnd() - 0.5) * 0.5);
+      g.globalAlpha = 0.10 + rnd() * 0.16;
+      g.beginPath();
+      g.ellipse(0, 0, W * (0.02 + rnd() * 0.075), 2 + rnd() * 6, 0, 0, Math.PI * 2);
+      g.fill(); g.restore();
+    }
+  },
+
+  mars(g, W, H, rnd) {
+    paintBands(g, W, H, [[0, "#c88a68"], [0.25, "#b5552f"],
+      [0.55, "#a34a28"], [0.8, "#93401f"], [1, "#b07a58"]]);
+    const dark = [                               // basalt plains
+      [0.56, 0.40, 0.075], [0.44, 0.30, 0.06], [0.70, 0.55, 0.05],
+      [0.18, 0.45, 0.055], [0.86, 0.35, 0.045], [0.32, 0.52, 0.04],
+    ];
+    for (const [fx, fy, fr] of dark)
+      paintBlob(g, fx * W, fy * H, fr * W, "#5c2c17", rnd, 0.7, 0.5);
+    for (let i = 0; i < 60; i++) {               // small craters
+      g.fillStyle = `rgba(70,32,16,${0.1 + rnd() * 0.15})`;
+      g.beginPath(); g.arc(rnd() * W, rnd() * H, 1 + rnd() * 4, 0, Math.PI * 2); g.fill();
+    }
+    paintStreaks(g, W, H, 130, rnd, 0.04, 0.03);  // dust
+    g.fillStyle = "#f2ede6";                      // polar caps
+    g.fillRect(0, 0, W, H * 0.03);
+    paintBlob(g, W * 0.5, H * 0.035, W * 0.05, "#f2ede6", rnd, 0.35);
+    g.fillRect(0, H * 0.96, W, H * 0.04);
+    paintBlob(g, W * 0.5, H * 0.96, W * 0.07, "#f2ede6", rnd, 0.35);
+  },
+
+  jupiter(g, W, H, rnd) {
+    paintBands(g, W, H, [
+      [0, "#c8ab8a"], [0.07, "#b3906c"], [0.14, "#e8dcc6"], [0.20, "#a97c55"],
+      [0.26, "#ecdfc6"], [0.33, "#c08a5f"], [0.40, "#eadbba"], [0.46, "#b28763"],
+      [0.53, "#e6d6b6"], [0.60, "#a87a55"], [0.68, "#dcc9a8"], [0.76, "#c39a72"],
+      [0.85, "#cbae88"], [1, "#b29273"],
+    ]);
+    paintStreaks(g, W, H, 700, rnd, 0.06, 0.05);
+    const sx = W * 0.63, sy = H * 0.66;          // the great red spot
+    g.fillStyle = "#d9c4a0";
+    g.beginPath(); g.ellipse(sx, sy, W * 0.048, H * 0.036, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "#b5482e";
+    g.beginPath(); g.ellipse(sx, sy, W * 0.036, H * 0.026, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "#c96a4a";
+    g.beginPath(); g.ellipse(sx, sy, W * 0.022, H * 0.015, 0, 0, Math.PI * 2); g.fill();
+  },
+
+  saturn(g, W, H, rnd) {
+    paintBands(g, W, H, [
+      [0, "#b89d6f"], [0.12, "#cbb183"], [0.24, "#dcc697"], [0.36, "#d2bb8c"],
+      [0.48, "#e6d2a8"], [0.60, "#d6bf90"], [0.74, "#c8ae7f"], [0.88, "#bAA176"], [1, "#b09872"],
+    ]);
+    paintStreaks(g, W, H, 320, rnd, 0.035, 0.03);
+  },
+
+  uranus(g, W, H, rnd) {
+    paintBands(g, W, H, [[0, "#84bcc8"], [0.45, "#a2d5dc"], [0.6, "#a6d8de"], [1, "#8cc2cc"]]);
+    paintStreaks(g, W, H, 50, rnd, 0.03, 0.015);
+  },
+
+  neptune(g, W, H, rnd) {
+    paintBands(g, W, H, [
+      [0, "#27409c"], [0.3, "#3558cc"], [0.5, "#2c50c0"], [0.7, "#3a5fd0"], [1, "#233a92"],
+    ]);
+    paintStreaks(g, W, H, 220, rnd, 0.05, 0.06);
+    g.fillStyle = "#182c74";                     // the great dark spot
+    g.beginPath(); g.ellipse(W * 0.4, H * 0.62, W * 0.045, H * 0.028, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "rgba(240,248,255,0.6)";       // methane cirrus alongside
+    for (let i = 0; i < 5; i++) {
+      g.fillRect(W * (0.34 + rnd() * 0.14), H * (0.53 + rnd() * 0.05), W * (0.02 + rnd() * 0.05), 1.5);
+    }
+  },
+
+  pluto(g, W, H, rnd) {
+    paintBands(g, W, H, [[0, "#cdb79b"], [0.5, "#c9b295"], [1, "#bfa78a"]]);
+    for (let i = 0; i < 7; i++)                  // the dark equatorial maculae
+      paintBlob(g, W * (0.08 + i * 0.06 + rnd() * 0.02), H * (0.5 + (rnd() - 0.5) * 0.14),
+        W * (0.03 + rnd() * 0.025), "#6f4c35", rnd, 0.8, 0.75);
+    const hx = W * 0.62, hy = H * 0.55, hr = W * 0.055;   // tombaugh regio
+    g.fillStyle = "#efe4d0";
+    g.beginPath(); g.arc(hx - hr * 0.52, hy - hr * 0.3, hr * 0.62, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.arc(hx + hr * 0.52, hy - hr * 0.3, hr * 0.62, 0, Math.PI * 2); g.fill();
+    g.beginPath();
+    g.moveTo(hx - hr * 1.1, hy - hr * 0.05); g.lineTo(hx + hr * 1.1, hy - hr * 0.05);
+    g.lineTo(hx, hy + hr * 1.15); g.closePath(); g.fill();
+  },
+};
+
+function makePlanetTexture(key) {
+  const painter = PLANET_PAINTERS[key];
+  if (!painter) return null;
+  const c = document.createElement("canvas");
+  c.width = 1024; c.height = 512;
+  let seed = 0;
+  for (const ch of key) seed = seed * 31 + ch.charCodeAt(0);
+  painter(c.getContext("2d"), c.width, c.height, mulberry(seed));
+  const tex = new THREE.CanvasTexture(c);
+  tex.anisotropy = 4;
+  return tex;
+}
+
+// sidereal rotation, hours (negative = retrograde), driven by the sim clock
+const SPIN_HOURS = {
+  mercury: 1407.6, venus: -5832.5, earth: 23.934, mars: 24.623,
+  jupiter: 9.925, saturn: 10.656, uranus: -17.24, neptune: 16.11, pluto: -153.29,
+};
+const Z_AXIS = new THREE.Vector3(0, 0, 1);
+const _spinQ = new THREE.Quaternion();
+
+// the sun's mesh was built before the painters existed — print it now
+sunMesh.material = new THREE.MeshBasicMaterial({ map: makePlanetTexture("sun") });
+
 // --- Bodies (true-scale spheres) + labels -----------------------------------
 
 const labelLayer = document.getElementById("labels");
@@ -278,10 +504,12 @@ const bodies = [];   // { key, name, mesh, labelEl, kind, getPosition(jd), ... }
 function addBody(opts) {
   let mesh = opts.mesh;
   if (!mesh) {
-    mesh = new THREE.Mesh(
-      new THREE.SphereGeometry(opts.radiusKm / KM_PER_AU, 32, 16),
-      new THREE.MeshLambertMaterial({ color: opts.colorHex })
-    );
+    const geo = new THREE.SphereGeometry(opts.radiusKm / KM_PER_AU, 48, 24);
+    const tex = makePlanetTexture(opts.key);
+    if (tex) geo.rotateX(Math.PI / 2);   // painted worlds: poles to ecliptic north
+    mesh = new THREE.Mesh(geo,
+      tex ? new THREE.MeshLambertMaterial({ map: tex })
+          : new THREE.MeshLambertMaterial({ color: opts.colorHex }));
     scene.add(mesh);
   }
 
@@ -373,6 +601,7 @@ const LAUNCH_JD = Ephem.jdTdbFromDate(new Date(TIME_EVENTS.launch.ms));
   rings.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), pole);
   const saturnBody = bodies.find((b) => b.key === "saturn");
   saturnBody.attachments = [rings];
+  saturnBody.tiltQ = rings.quaternion.clone();   // the planet spins in the ring plane
   scene.add(rings);
 }
 
@@ -844,10 +1073,16 @@ function animate(t) {
   const simDate = new Date(clock.simMs);
   const jd = Ephem.jdTdbFromDate(simDate);
 
-  // real positions, every frame
+  // real positions, every frame — and real day lengths on the painted worlds
   for (const b of bodies) {
     b.mesh.position.copy(toVec3(b.getPosition(jd)));
     if (b.attachments) for (const a of b.attachments) a.position.copy(b.mesh.position);
+    const spinHours = SPIN_HOURS[b.key];
+    if (spinHours) {
+      const angle = (clock.simMs / 3600000 / spinHours) * Math.PI * 2 % (Math.PI * 2);
+      if (b.tiltQ) b.mesh.quaternion.copy(b.tiltQ).multiply(_spinQ.setFromAxisAngle(Z_AXIS, angle));
+      else b.mesh.rotation.z = angle;
+    }
   }
   voyager.mesh.visible = jd >= LAUNCH_JD;
   updateTrail(jd);
