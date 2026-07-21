@@ -62,12 +62,24 @@ DONE (on top of session 1):
   then ~30 s of true-scale emptiness — intentional.
 - Shareable links: `#enter&date=1980-11-12&visit=saturn`, `#enter&ride`.
 
+## Status after session 3 (2026-07-21)
+DONE (sorkthropic's requests after playing with it):
+- vintage/dusty film: svg grain over everything, warm vignette,
+  off-register red pass on the poster title, aged ink on the circle.
+- painted worlds: procedural canvas textures for sun + 8 planets +
+  pluto (GRS, tombaugh heart, polar caps, clouds...) — photo files
+  can't reach webgl from file://, hence painted in code. Real sidereal
+  spin rates on the sim clock; saturn spins in its ring plane.
+- year stamps (1980…2025, every 5 y) along the flown trail, decluttered.
+- voyager 1 inspection view: second small 3d scene (own renderer) with
+  the craft built from primitives (dish, bus, rtgs, scan platform,
+  magnetometer boom, whips, golden record), opens on visiting voyager;
+  caption states the map stays true scale (4 m < 1 px).
+
 ## Roadmap
-Session 3: mobile pass (touch targets, timestrip on small screens),
-  maybe sound, richer landing poster stats, any polish sorkthropic asks
-  for after playing with it.
-Session 4: README screenshots, GitHub Pages deploy (repo
-  alansork/voyager-tracker already exists), link from sorkthropic-site.
+Session 4: mobile pass (touch targets on phones), maybe sound, README
+  screenshots, GitHub Pages deploy (repo alansork/voyager-tracker
+  already exists), link from sorkthropic-site.
 
 ## Headless testing recipe (works on this Mac)
 Chrome `--headless=new --use-angle=swiftshader --enable-unsafe-swiftshader
