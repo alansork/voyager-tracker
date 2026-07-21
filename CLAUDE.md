@@ -76,10 +76,18 @@ DONE (sorkthropic's requests after playing with it):
   magnetometer boom, whips, golden record), opens on visiting voyager;
   caption states the map stays true scale (4 m < 1 px).
 
+## Status after session 4 (2026-07-21)
+- LIVE at https://alansork.github.io/voyager-tracker/ (GitHub Pages,
+  main branch, root). README links it.
+- Aged-archive aesthetic (sorkthropic asked for "much more vintage,
+  looks old"): sun-faded palette, sepia filter on the plates, heavy
+  grain, deep vignette, foxing stains + coffee ring, poster fold
+  creases + halftone circle + jpl rubber stamp, crooked panels,
+  fig. 1/2/3 captions, archivist's pencil down the left rule.
+
 ## Roadmap
-Session 4: mobile pass (touch targets on phones), maybe sound, README
-  screenshots, GitHub Pages deploy (repo alansork/voyager-tracker
-  already exists), link from sorkthropic-site.
+Later: mobile pass (touch targets on phones), maybe sound, README
+  screenshots, link from sorkthropic-site.
 
 ## Headless testing recipe (works on this Mac)
 Chrome `--headless=new --use-angle=swiftshader --enable-unsafe-swiftshader
