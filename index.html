@@ -14,6 +14,8 @@
   <div id="frame-top"></div>
   <div id="frame-left"></div>
   <div id="frame-corner"></div>
+  <div id="frame-dot"></div>
+  <div id="frame-sq"></div>
 
   <!-- Live readouts, styled like a letterpress data strip -->
   <div id="hud">
@@ -46,7 +48,7 @@
     <div><i class="sym sym-triangle"></i> voyager 1</div>
   </div>
 
-  <div id="hint">drag &middot; scroll or pinch &middot; click a name &middot; &larr;&rarr; time &middot; esc back</div>
+  <div id="hint">drag &middot; scroll or pinch &middot; click a name &middot; &larr;&rarr; time &middot; g record &middot; esc back</div>
 
   <!-- Labels for every body get injected here by app.js -->
   <div id="labels"></div>
@@ -56,6 +58,27 @@
 
   <!-- Ride the radio: fly with a command signal from earth to voyager 1 -->
   <button id="ride-btn"><i class="sym sym-triangle"></i> ride the signal &middot; earth &rarr; voyager 1</button>
+
+  <!-- The golden record: click it (or press g) to read what humanity sent -->
+  <button id="record-btn" title="the golden record (g)"></button>
+  <div id="record-panel" class="hidden">
+    <button id="record-close" title="close (esc)">&times;</button>
+    <div class="record-kind">bolted to the side of the ship</div>
+    <h2>the golden record</h2>
+    <p>
+      a 12-inch gold-plated copper disc — a message in a bottle, thrown
+      into an ocean a billion years wide, for whoever finds the ship.
+    </p>
+    <ul>
+      <li>115 images of earth encoded in its grooves</li>
+      <li>greetings in 55 human languages — and one from the humpback whales</li>
+      <li>90 minutes of music: bach, gamelan, blind willie johnson, chuck berry</li>
+      <li>the sounds of surf, wind, a heartbeat, a kiss, a mother's first words</li>
+      <li>a map of 14 pulsars that points back to our sun</li>
+      <li>a stylus is included, with playing instructions etched on the cover</li>
+      <li>expected to remain playable for over a billion years</li>
+    </ul>
+  </div>
   <div id="ride-caption" class="hidden">
     <div id="ride-zone">—</div>
     <div id="ride-counter">—</div>
@@ -67,6 +90,7 @@
       <button class="chip" data-event="launch">launch &middot; 1977</button>
       <button class="chip" data-event="jupiter">jupiter &middot; 1979</button>
       <button class="chip" data-event="saturn">saturn &middot; 1980</button>
+      <button class="chip" data-event="pbd">pale blue dot &middot; 1990</button>
       <button class="chip" data-event="shock">shock &middot; 2004</button>
       <button class="chip" data-event="heliopause">heliopause &middot; 2012</button>
       <button class="chip chip-live" data-event="live">now</button>
@@ -116,8 +140,9 @@
         <button class="enter" id="enterBtn">enter</button>
       </div>
 
-      <div class="poster-vertical">weimar &middot; dessau &middot; interstellar space</div>
+      <div class="poster-vertical">pasadena &middot; cape canaveral &middot; interstellar space</div>
       <div class="poster-year">1977&ndash;&infin;</div>
+      <div class="poster-mark">the grand tour &middot; craft n&deg; 1</div>
     </div>
   </div>
 

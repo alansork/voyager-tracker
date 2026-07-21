@@ -13,8 +13,9 @@
  */
 
 :root {
-  --paper: #ede8dc;        /* aged poster paper */
+  --paper: #ede8dc;        /* aged poster paper — now the ink, printed on night */
   --ink: #16130e;          /* letterpress black */
+  --panel: #211c14;        /* dark panel surface: black paper, warm like the ink */
   --red: #c62f1e;          /* bauhaus red */
   --blue: #21489c;         /* bauhaus blue */
   --yellow: #e3a71b;       /* bauhaus yellow */
@@ -33,7 +34,9 @@ html, body {
   text-transform: lowercase;   /* bayer's universal alphabet: no capitals */
 }
 
-canvas { display: block; position: fixed; inset: 0; }
+/* touch-action: none lets our own pinch code receive touch pointers instead
+   of the browser hijacking them for page zoom */
+canvas { display: block; position: fixed; inset: 0; touch-action: none; }
 
 /* --- The Bauhaus frame around the viewport ------------------------------- */
 
@@ -49,6 +52,15 @@ canvas { display: block; position: fixed; inset: 0; }
   position: fixed; top: 0; left: 0; width: 22px; height: 22px;
   background: var(--red); z-index: 31;
 }
+/* the form lesson rides the top rule: circle, square after the red corner */
+#frame-dot {
+  position: fixed; top: 0; left: 34px; width: 13px; height: 13px;
+  background: var(--yellow); border-radius: 50%; z-index: 31;
+}
+#frame-sq {
+  position: fixed; top: 0; left: 57px; width: 9px; height: 9px;
+  background: var(--blue); z-index: 31;
+}
 
 /* --- HUD: a letterpress data strip down the right edge -------------------- */
 
@@ -58,8 +70,8 @@ canvas { display: block; position: fixed; inset: 0; }
   font-size: 13px; letter-spacing: 0.06em;
 }
 .hud-block {
-  background: var(--paper); color: var(--ink);
-  border-left: 6px solid var(--ink);
+  background: var(--panel); color: var(--paper);
+  border-left: 6px solid var(--paper);
   padding: 6px 14px 6px 10px;
   min-width: 210px;
   display: flex; flex-direction: column;
@@ -74,10 +86,10 @@ canvas { display: block; position: fixed; inset: 0; }
 
 #legend {
   position: fixed; left: 26px; bottom: 22px; z-index: 20;
-  background: var(--paper); color: var(--ink);
+  background: var(--panel); color: var(--paper);
   padding: 10px 16px; font-size: 12px; letter-spacing: 0.1em;
   display: flex; flex-direction: column; gap: 6px;
-  border-top: 6px solid var(--ink);
+  border-top: 6px solid var(--paper);
 }
 .sym { display: inline-block; width: 11px; height: 11px; margin-right: 8px; }
 .sym-circle { background: var(--red); border-radius: 50%; }
@@ -136,11 +148,11 @@ canvas { display: block; position: fixed; inset: 0; }
   position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
   z-index: 25; display: flex; flex-direction: column; align-items: center; gap: 0;
 }
-#time-events { display: flex; gap: 2px; }
+#time-events { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; }
 .chip {
   font-family: var(--font); text-transform: lowercase;
   font-size: 10px; letter-spacing: 0.14em;
-  background: var(--paper); color: var(--ink);
+  background: var(--panel); color: var(--paper);
   border: none; border-top: 4px solid var(--blue);
   padding: 5px 10px 4px; cursor: pointer;
 }
@@ -186,11 +198,64 @@ canvas { display: block; position: fixed; inset: 0; }
   color: var(--paper); opacity: 0.85; font-variant-numeric: tabular-nums;
 }
 
+/* --- The golden record: bolted to the left rail, spinning slowly ----------- */
+
+#record-btn {
+  position: fixed; left: 26px; bottom: 172px; z-index: 20;
+  width: 46px; height: 46px; border-radius: 50%; border: none; cursor: pointer;
+  padding: 0;
+  background:
+    radial-gradient(circle at 50% 50%,
+      var(--ink) 0 9%, transparent 9.5%),            /* spindle hole */
+    repeating-radial-gradient(circle at 50% 50%,
+      #d9a022 0 2px, #b57f10 2px 4px);               /* grooves */
+  animation: record-spin 24s linear infinite;
+}
+#record-btn::after {
+  /* an off-centre glint so the spin is visible */
+  content: ""; position: absolute; left: 58%; top: 16%;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #f4dc9a; opacity: 0.9;
+}
+#record-btn:hover { animation-duration: 3s; }
+@keyframes record-spin { to { transform: rotate(360deg); } }
+
+#record-panel {
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  z-index: 38; width: min(400px, 88vw);
+  background: var(--panel); color: var(--paper);
+  border-left: 6px solid var(--yellow);
+  padding: 18px 22px 16px;
+  transition: opacity 0.3s ease;
+}
+#record-panel.hidden { opacity: 0; pointer-events: none; }
+#record-panel .record-kind { font-size: 10px; letter-spacing: 0.3em; opacity: 0.6; }
+#record-panel h2 {
+  margin: 2px 0 10px; font-size: 24px; font-weight: 700;
+  border-bottom: 4px solid var(--yellow); padding-bottom: 6px;
+}
+#record-panel p { font-size: 12px; line-height: 1.55; margin: 0 0 10px; }
+#record-panel ul { margin: 0; padding: 0; list-style: none; }
+#record-panel li {
+  font-size: 11.5px; line-height: 1.5; letter-spacing: 0.04em;
+  padding: 5px 0 5px 0; border-top: 1px solid rgba(237,232,220,0.22);
+  display: flex; gap: 10px; align-items: baseline;
+}
+#record-panel li::before {
+  content: ""; flex: 0 0 8px; width: 8px; height: 8px;
+  background: var(--yellow); border-radius: 50%; transform: translateY(1px);
+}
+#record-close {
+  position: absolute; top: 6px; right: 8px;
+  background: none; border: none; cursor: pointer;
+  font-size: 18px; color: var(--paper); font-family: var(--font);
+}
+
 /* --- Info card: the visiting card of a world ------------------------------- */
 
 #infocard {
   position: fixed; right: 0; bottom: 60px; z-index: 22;
-  width: 250px; background: var(--paper); color: var(--ink);
+  width: 250px; background: var(--panel); color: var(--paper);
   border-left: 6px solid var(--red);
   padding: 14px 16px 12px;
   transition: transform 0.35s ease, opacity 0.35s ease;
@@ -199,17 +264,17 @@ canvas { display: block; position: fixed; inset: 0; }
 #infocard-close {
   position: absolute; top: 4px; right: 6px;
   background: none; border: none; cursor: pointer;
-  font-size: 18px; color: var(--ink); font-family: var(--font);
+  font-size: 18px; color: var(--paper); font-family: var(--font);
 }
 #infocard-kind { font-size: 10px; letter-spacing: 0.3em; opacity: 0.6; }
 #infocard h2 {
   margin: 2px 0 8px; font-size: 26px; font-weight: 700; letter-spacing: 0.02em;
-  border-bottom: 4px solid var(--ink); padding-bottom: 6px;
+  border-bottom: 4px solid var(--paper); padding-bottom: 6px;
 }
 #infocard p { font-size: 12px; line-height: 1.5; margin: 0 0 10px; }
 .infocard-row {
   display: flex; justify-content: space-between; gap: 14px; font-size: 11px;
-  letter-spacing: 0.08em; padding: 3px 0; border-top: 1px solid rgba(22,19,14,0.25);
+  letter-spacing: 0.08em; padding: 3px 0; border-top: 1px solid rgba(237,232,220,0.25);
   font-variant-numeric: tabular-nums;
 }
 .infocard-row b { font-weight: 700; text-align: right; }
@@ -218,7 +283,7 @@ canvas { display: block; position: fixed; inset: 0; }
 
 #landing {
   position: fixed; inset: 0; z-index: 40;
-  background: var(--paper);
+  background: var(--ink);
   transition: opacity 0.9s ease, visibility 0.9s;
 }
 #landing.hidden { opacity: 0; visibility: hidden; }
@@ -234,7 +299,7 @@ canvas { display: block; position: fixed; inset: 0; }
 .poster-bar {
   position: absolute; left: -12%; top: 30%;
   width: 150%; height: 3.2vmin;
-  background: var(--ink);
+  background: var(--paper);
   transform: rotate(-24deg); transform-origin: 20% 50%;
 }
 .poster-triangle {
@@ -252,12 +317,12 @@ canvas { display: block; position: fixed; inset: 0; }
 }
 .poster-rule-v {
   position: absolute; left: 52%; top: 0; bottom: 0; width: 1.1vmin;
-  background: var(--ink);
+  background: var(--paper);
 }
 
 .poster-text {
   position: absolute; left: 56%; top: 14%; width: 34%;
-  color: var(--ink);
+  color: var(--paper);
 }
 .poster-text .name {
   font-size: 13px; letter-spacing: 0.5em; margin-bottom: 2.5vmin;
@@ -273,30 +338,34 @@ canvas { display: block; position: fixed; inset: 0; }
 }
 .poster-data {
   font-size: 13px; letter-spacing: 0.08em;
-  border-top: 4px solid var(--ink);
-  border-bottom: 4px solid var(--ink);
+  border-top: 4px solid var(--paper);
+  border-bottom: 4px solid var(--paper);
   padding: 1.2vmin 0; margin-bottom: 4vmin;
   font-variant-numeric: tabular-nums;
 }
-.poster-data span { font-weight: 700; color: var(--red); }
+.poster-data span { font-weight: 700; color: var(--yellow); }
 
 .enter {
   font-family: var(--font); text-transform: lowercase;
   font-size: 18px; letter-spacing: 0.35em; font-weight: 600;
-  color: var(--paper); background: var(--ink);
+  color: var(--ink); background: var(--paper);
   border: none; cursor: pointer;
   padding: 2vmin 6vmin 2vmin 6.35vmin;   /* extra left = optically centres the tracked text */
 }
-.enter:hover { background: var(--red); }
+.enter:hover { background: var(--red); color: var(--paper); }
 
 .poster-vertical {
   position: absolute; left: 3.2%; bottom: 6%;
-  color: var(--ink); font-size: 12px; letter-spacing: 0.5em;
+  color: var(--paper); font-size: 12px; letter-spacing: 0.5em;
   writing-mode: vertical-rl; transform: rotate(180deg);
 }
 .poster-year {
   position: absolute; right: 3%; top: 4%;
-  color: var(--ink); font-size: 14px; letter-spacing: 0.3em; font-weight: 600;
+  color: var(--paper); font-size: 14px; letter-spacing: 0.3em; font-weight: 600;
+}
+.poster-mark {
+  position: absolute; right: 3%; top: 8.5%;
+  color: var(--paper); font-size: 10px; letter-spacing: 0.3em; opacity: 0.55;
 }
 
 /* small screens: stack the poster text over the geometry */

@@ -18,6 +18,11 @@ build; commit small working steps (crash-safe, like bum-closet).
   change: `node tests/ephemeris.test.js`.
 - Bauhaus palette only in UI: --paper #ede8dc, --ink #16130e,
   --red #c62f1e, --blue #21489c, --yellow #e3a71b. All text lowercase.
+- DARK MODE (sorkthropic, 2026-07-21): panels/poster print on dark
+  (--panel #211c14, poster on --ink), never paper-white surfaces.
+- The words "bauhaus / dessau / weimar / kandinsky" etc. must NEVER
+  appear in user-visible UI text — the style stays, the words go;
+  all copy is about the mission itself. (Code comments are fine.)
 - Symbols: planet = red circle, dwarf planet = blue square,
   voyager 1 = yellow triangle (Kandinsky's form lesson).
 

@@ -127,6 +127,7 @@ const TIME_EVENTS = {
   launch:     { ms: Date.UTC(1977, 8, 5, 12, 56), label: "launch" },
   jupiter:    { ms: Date.UTC(1979, 2, 5, 12, 5),  label: "jupiter flyby" },
   saturn:     { ms: Date.UTC(1980, 10, 12, 23, 46), label: "saturn flyby" },
+  pbd:        { ms: Date.UTC(1990, 1, 14, 4, 48),  label: "the pale blue dot" },
   shock:      { ms: Date.UTC(2004, 11, 16),       label: "termination shock" },
   heliopause: { ms: Date.UTC(2012, 7, 25),        label: "heliopause crossing" },
 };
@@ -470,17 +471,42 @@ window.addEventListener("pointermove", (e) => {
   view.polar = Math.min(Math.PI - 0.05, Math.max(0.05, view.polar - (e.clientY - p.y) * 0.005));
   p.x = e.clientX; p.y = e.clientY;
 });
+function clampDistance(d) {
+  return Math.min(view.maxDistance, Math.max(view.minDistance, d));
+}
+
+// passive: false + preventDefault matters: a mac trackpad pinch arrives as a
+// ctrl+wheel event, and without it the browser zooms the page, not the scene
 window.addEventListener("wheel", (e) => {
+  e.preventDefault();
   if (ride.active) endRide(false);
-  view.wantDistance *= Math.exp(e.deltaY * 0.0012);
-  view.wantDistance = Math.min(view.maxDistance, Math.max(view.minDistance, view.wantDistance));
-}, { passive: true });
+  const sensitivity = e.ctrlKey ? 0.01 : 0.0012;   // pinch deltas are small
+  view.wantDistance = clampDistance(view.wantDistance * Math.exp(e.deltaY * sensitivity));
+}, { passive: false });
+
+// safari (mac + ios) reports trackpad pinches as gesture events instead
+let gestureStartDistance = 0;
+window.addEventListener("gesturestart", (e) => {
+  e.preventDefault();
+  gestureStartDistance = view.wantDistance;
+});
+window.addEventListener("gesturechange", (e) => {
+  e.preventDefault();
+  if (e.scale > 0) view.wantDistance = clampDistance(gestureStartDistance / e.scale);
+});
+window.addEventListener("gestureend", (e) => e.preventDefault());
 
 window.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") { if (ride.active) endRide(false); else backToSystem(); }
+  if (e.key === "Escape") {
+    if (!recordPanel.classList.contains("hidden")) toggleRecord(false);
+    else if (ride.active) endRide(false);
+    else backToSystem();
+  }
   if (e.key === "ArrowLeft") nudgeRate(-1);
   if (e.key === "ArrowRight") nudgeRate(+1);
   if (e.key.toLowerCase() === "l") setLive();
+  if (e.key.toLowerCase() === "g")
+    toggleRecord(recordPanel.classList.contains("hidden"));
 });
 
 // --- Time strip wiring ------------------------------------------------------
@@ -510,6 +536,8 @@ const RIDE_ZONES = [   // [outer edge in au from the sun, caption]
   [10.1,     "crossing saturn's orbit"],
   [19.9,     "crossing uranus' orbit"],
   [30.5,     "crossing neptune's orbit"],
+  [39.5,     "the kuiper belt"],
+  [42.5,     "1990 · the pale blue dot was taken near here"],
   [50,       "the kuiper belt"],
   [94,       "the scattered dark — hours of nothing"],
   [121.6,    "past the termination shock"],
@@ -632,6 +660,27 @@ function updateHud(date) {
 
 // --- Info card ---------------------------------------------------------------
 
+// while voyager's card is open, its fact line slowly cycles the good stories
+const VOYAGER_FACTS = [
+  "825 kg of 1977 engineering, still phoning home on 23 watts — about the power of a fridge bulb.",
+  "its computers hold 69 kb of memory in total. this web page weighs more.",
+  "a command radioed today arrives after nearly a full day — driving it takes patience measured in weeks.",
+  "powered by decaying plutonium. the warmth fades ~4 watts a year; the last instrument falls silent around 2030.",
+  "on 1990-02-14 it turned its camera home one final time: the pale blue dot, earth in a sunbeam.",
+  "it borrowed speed from jupiter to escape the sun — jupiter slowed down, immeasurably, in exchange.",
+  "in about 40,000 years it drifts within 1.6 light-years of the star gliese 445.",
+  "it carries the golden record — press g to read what humanity sent along.",
+];
+let factIndex = 0, factTimer = null;
+function stopFactCycle() { if (factTimer) { clearInterval(factTimer); factTimer = null; } }
+function startFactCycle(el) {
+  stopFactCycle();
+  factTimer = setInterval(() => {
+    factIndex = (factIndex + 1) % VOYAGER_FACTS.length;
+    el.textContent = VOYAGER_FACTS[factIndex];
+  }, 8000);
+}
+
 const card = {
   el: document.getElementById("infocard"),
   kind: document.getElementById("infocard-kind"),
@@ -655,7 +704,13 @@ function showInfoCard(body) {
   card.body = body;
   card.kind.textContent = KIND_NAMES[body.kind];
   card.name.textContent = body.name;
-  card.fact.textContent = body.fact || "";
+  if (body.kind === "voyager") {
+    card.fact.textContent = VOYAGER_FACTS[factIndex];
+    startFactCycle(card.fact);
+  } else {
+    stopFactCycle();
+    card.fact.textContent = body.fact || "";
+  }
   card.radius.textContent = body.kind === "voyager" ? "~4 m across"
     : `${fmt(body.radiusKm, 0)} km`;
   if (body.periodYears) {
@@ -669,7 +724,16 @@ function showInfoCard(body) {
   card.disc.textContent = body.discovered || "—";
   card.el.classList.remove("hidden");
 }
-function hideInfoCard() { card.body = null; card.el.classList.add("hidden"); }
+function hideInfoCard() { card.body = null; card.el.classList.add("hidden"); stopFactCycle(); }
+
+// --- The golden record panel ------------------------------------------------
+
+const recordPanel = document.getElementById("record-panel");
+function toggleRecord(open) {
+  recordPanel.classList.toggle("hidden", !open);
+}
+document.getElementById("record-btn").addEventListener("click", () => toggleRecord(true));
+document.getElementById("record-close").addEventListener("click", () => toggleRecord(false));
 
 // --- Labels: follow the bodies, and never pile on top of each other ---------
 // When the view is wide, dozens of labels would collide near the sun. Each
@@ -802,8 +866,10 @@ if (location.hash.startsWith("#enter")) {
     view.distance = view.wantDistance;
   }
 
-  // #enter&ride drops you straight onto the signal
+  // #enter&ride drops you straight onto the signal;
+  // #enter&record opens the golden record
   if (/[&#]ride\b/.test(location.hash)) startRide();
+  if (/[&#]record\b/.test(location.hash)) toggleRecord(true);
 }
 
 window.addEventListener("resize", () => {
