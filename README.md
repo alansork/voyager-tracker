@@ -2,6 +2,8 @@
 
 by **sorkthropic**
 
+**live: <https://alansork.github.io/voyager-tracker/>**
+
 The live position of Voyager 1 — the farthest machine humanity has ever
 built — computed in your browser from its real NASA-tracked trajectory,
 shown among all eight planets, the asteroid belt, the Kuiper belt, the
@@ -12,10 +14,13 @@ Real distances, real orbits, real radii. Nothing is compressed,
 exaggerated, or "adjusted to look nicer".
 
 The design copies the graphic language of the **Bauhaus** school
-(Weimar/Dessau, 1919–1933) as it was originally practiced: only the
-primary colours plus black on paper-white, Kandinsky's circle/square/
-triangle as the map symbols, Herbert Bayer's all-lowercase typography,
-asymmetric poster composition.
+(Weimar/Dessau, 1919–1933) as it was originally practiced — only the
+primary colours plus black, Kandinsky's circle/square/triangle as the
+map symbols, Herbert Bayer's all-lowercase typography, asymmetric
+poster composition — printed dark, then aged fifty years in a mission
+file: sun-faded inks, film grain, fold creases, foxing stains and a
+JPL rubber stamp. (In the app itself the copy never name-drops the
+school; the interface talks only about the mission.)
 
 ## run it
 
@@ -28,7 +33,7 @@ all ephemeris data is baked in from NASA/JPL Horizons (fetched 2026-07-20).
 node tests/ephemeris.test.js
 ```
 
-25 checks compare every planet, dwarf planet, asteroid and Voyager 1
+32 checks compare every planet, dwarf planet, asteroid and Voyager 1
 itself against positions computed by NASA's Horizons system.
 
 ## how the physics works
